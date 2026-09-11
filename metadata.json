@@ -1,0 +1,8 @@
+{
+  "name": "Universal Code Studio",
+  "description": "A professional browser-based multi-language development environment designed to bring coding, execution, diagnostics, debugging, testing, and project management into one focused workspace.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
