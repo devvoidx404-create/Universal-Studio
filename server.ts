@@ -18,7 +18,7 @@ import { explainProject, explainError } from "./server/analyzer";
 import { sendEmail } from "./server/mailer";
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 // Body parser
 app.use(express.json({ limit: "5mb" }));
@@ -29,7 +29,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("X-XSS-Protection", "1; mode=block");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV !== "development") {
     res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   }
   next();
@@ -1045,7 +1045,8 @@ app.post("/api/run/explain-error", authenticate, async (req: AuthRequest, res: R
 // ==========================================
 
 async function startServer() {
-  if (process.env.NODE_ENV !== "production") {
+  const isDev = process.env.NODE_ENV === "development";
+  if (isDev) {
     // Mount Vite dev server middleware to let Vite compile and serve client TSX code
     const vite = await createViteServer({
       server: { middlewareMode: true },

@@ -10,6 +10,7 @@ interface DashboardProps {
   onNavigateToSecurity: () => void;
   onLogout: () => void;
   userEmail: string;
+  isMobileLayout?: boolean;
 }
 
 export default function Dashboard({
@@ -18,10 +19,14 @@ export default function Dashboard({
   onNavigateToSecurity,
   onLogout,
   userEmail,
+  isMobileLayout = false,
 }: DashboardProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [securityStatus, setSecurityStatus] = useState<any>({ mfaEnabled: false });
   const [recentLogs, setRecentLogs] = useState<SecurityLog[]>([]);
+  
+  // Tab control for mobile view
+  const [mobileTab, setMobileTab] = useState<"projects" | "security">("projects");
 
   // Project Creation states
   const [isCreating, setIsCreating] = useState(false);
@@ -119,61 +124,90 @@ export default function Dashboard({
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0C] text-white p-6 md:p-8 selection:bg-blue-600 selection:text-white">
+    <div className={`min-h-screen bg-[#0A0A0C] text-white ${isMobileLayout ? "p-4 pb-16" : "p-6 md:p-8"} selection:bg-blue-600 selection:text-white`}>
       {/* Upper Navigation bar */}
-      <header className="max-w-7xl mx-auto flex justify-between items-center border-b border-gray-800 pb-5 mb-8">
+      <header className="max-w-7xl mx-auto flex justify-between items-center border-b border-gray-800 pb-5 mb-6">
         <div>
-          <h1 className="text-xl font-extrabold tracking-tight flex items-center gap-2 uppercase">
-            <Code className="w-5 h-5 text-blue-500" /> Universal Code Studio
+          <h1 className={`${isMobileLayout ? "text-base" : "text-xl"} font-extrabold tracking-tight flex items-center gap-2 uppercase`}>
+            <Code className="w-5 h-5 text-blue-500 animate-pulse" /> Universal Code Studio
           </h1>
-          <p className="text-xs text-gray-500 font-mono">WORKSPACE_OPERATOR: {userEmail}</p>
+          <p className="text-[10px] text-gray-500 font-mono truncate max-w-[200px] sm:max-w-none">OPERATOR: {userEmail}</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <button
             onClick={onNavigateToSecurity}
-            className="px-3.5 py-1.5 border border-gray-800 bg-[#121216] text-xs font-semibold rounded-lg hover:bg-gray-800/50 transition flex items-center gap-1.5"
+            className={`px-2.5 py-2 border border-gray-800 bg-[#121216] text-[10px] font-semibold rounded-lg hover:bg-gray-800/50 transition flex items-center gap-1.5 ${isMobileLayout ? "min-h-[44px]" : ""}`}
           >
             {securityStatus.mfaEnabled ? (
-              <ShieldCheck className="w-4 h-4 text-green-500" />
+              <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
             ) : (
-              <ShieldAlert className="w-4 h-4 text-amber-500" />
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
             )}
-            MFA Status
+            {!isMobileLayout && "MFA Status"}
           </button>
           <button
             onClick={onLogout}
-            className="px-3.5 py-1.5 bg-red-950/20 border border-red-900/30 text-red-400 text-xs font-semibold rounded-lg hover:bg-red-950/60 transition flex items-center gap-1.5"
+            className={`px-3 py-2 bg-red-950/20 border border-red-900/30 text-red-400 text-[10px] font-semibold rounded-lg hover:bg-red-950/60 transition flex items-center gap-1.5 ${isMobileLayout ? "min-h-[44px]" : ""}`}
           >
-            <LogOut className="w-3.5 h-3.5" /> Logout
+            <LogOut className="w-3.5 h-3.5" /> {!isMobileLayout && "Logout"}
           </button>
         </div>
       </header>
 
       {/* PWA Guided Installation Banner */}
-      <div className="max-w-7xl mx-auto mb-8">
+      <div className="max-w-7xl mx-auto mb-6">
         <PWAInstallButton />
       </div>
 
+      {/* Mobile-only touch tab switcher */}
+      {isMobileLayout && (
+        <div className="max-w-7xl mx-auto flex gap-2 p-1 bg-[#121216] border border-gray-800 rounded-xl mb-6">
+          <button
+            type="button"
+            onClick={() => setMobileTab("projects")}
+            className={`flex-1 py-2.5 text-center text-xs font-bold font-mono uppercase tracking-wider rounded-lg transition ${
+              mobileTab === "projects"
+                ? "bg-blue-600 text-white"
+                : "text-gray-400 hover:text-white"
+            }`}
+          >
+            Projects
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab("security")}
+            className={`flex-1 py-2.5 text-center text-xs font-bold font-mono uppercase tracking-wider rounded-lg transition ${
+              mobileTab === "security"
+                ? "bg-blue-600 text-white"
+                : "text-gray-400 hover:text-white"
+            }`}
+          >
+            Security Status
+          </button>
+        </div>
+      )}
+
       <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column (2 cols wide): Projects & Creations */}
-        <section className="lg:col-span-2 space-y-6">
-          {/* Header Action card */}
-          <div className="bg-[#121216] border border-gray-800 rounded-xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-bold">Select or Create a Sandbox</h2>
-              <p className="text-xs text-gray-400 mt-0.5">
-                Establish clean local project structures. Boost templates automatically.
-              </p>
+        {(!isMobileLayout || mobileTab === "projects") && (
+          <section className="lg:col-span-2 space-y-6">
+            {/* Header Action card */}
+            <div className="bg-[#121216] border border-gray-800 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-sm md:text-lg font-bold">Select or Create a Sandbox</h2>
+                <p className="text-[10px] md:text-xs text-gray-400 mt-0.5">
+                  Establish clean local project structures. Boost templates automatically.
+                </p>
+              </div>
+              {!isCreating && (
+                <button
+                  onClick={() => setIsCreating(true)}
+                  className={`px-4 py-2 bg-blue-600 hover:bg-blue-700 font-semibold text-xs rounded-lg transition flex items-center gap-2 self-start sm:self-auto ${isMobileLayout ? "w-full justify-center py-3 min-h-[44px]" : ""}`}
+                >
+                  <FolderPlus className="w-4 h-4" /> New Project
+                </button>
+              )}
             </div>
-            {!isCreating && (
-              <button
-                onClick={() => setIsCreating(true)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 font-semibold text-xs rounded-lg transition flex items-center gap-2 self-start sm:self-auto"
-              >
-                <FolderPlus className="w-4 h-4" /> New Project
-              </button>
-            )}
-          </div>
 
           {/* Project creation state drawer/panel */}
           {isCreating && (
@@ -301,9 +335,11 @@ export default function Dashboard({
             </div>
           )}
         </section>
+        )}
 
         {/* Right column: Security metrics & auditable logs */}
-        <section className="space-y-6">
+        {(!isMobileLayout || mobileTab === "security") && (
+          <section className="space-y-6">
           {/* Security Summary Widget */}
           <div className="bg-[#121216] border border-gray-800 rounded-xl p-5 space-y-4">
             <h3 className="text-xs font-bold tracking-widest text-gray-400 font-mono uppercase flex items-center gap-1.5">
@@ -387,6 +423,7 @@ export default function Dashboard({
             )}
           </div>
         </section>
+        )}
       </main>
 
       {/* Network Connectivity Toast Indicator */}

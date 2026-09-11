@@ -3,6 +3,7 @@ export interface User {
   email: string;
   isVerified: boolean;
   mfaEnabled: boolean;
+  isGuest?: boolean;
 }
 
 export interface SessionRecord {

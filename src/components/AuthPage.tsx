@@ -14,6 +14,9 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+
   // Sandbox simulation helps
   const [simulationCode, setSimulationCode] = useState<string | null>(null);
   const [simulationToken, setSimulationToken] = useState<string | null>(null);
@@ -317,11 +320,24 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
               <div className="flex-grow border-t border-gray-800/60"></div>
             </div>
 
+            <div className="flex items-start gap-2.5 p-2.5 bg-blue-950/10 border border-blue-950/30 rounded-lg text-left my-2">
+              <input
+                id="privacy-checkbox"
+                type="checkbox"
+                checked={acceptPrivacy}
+                onChange={(e) => setAcceptPrivacy(e.target.checked)}
+                className="mt-0.5 h-3.5 w-3.5 rounded border-gray-800 bg-[#16161B] text-blue-500 focus:ring-blue-500/20 focus:ring-offset-0 focus:outline-none cursor-pointer shrink-0"
+              />
+              <label htmlFor="privacy-checkbox" className="text-[10px] text-gray-400 leading-normal select-none cursor-pointer">
+                I accept the <button type="button" onClick={() => setShowPrivacyModal(true)} className="text-blue-500 hover:underline font-semibold font-mono">Universal Privacy Policy</button> to unlock immediate guest sandboxing.
+              </label>
+            </div>
+
             <button
               type="button"
-              disabled={loading}
+              disabled={loading || !acceptPrivacy}
               onClick={handleGuestLogin}
-              className="w-full py-2.5 bg-[#16161B] hover:bg-[#1E1E24] active:bg-[#121216] border border-blue-900/30 hover:border-blue-800/50 text-blue-400 hover:text-blue-300 font-semibold rounded-lg text-sm transition focus:outline-none disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm font-mono uppercase tracking-wide text-xs"
+              className="w-full py-2.5 bg-[#16161B] hover:bg-[#1E1E24] active:bg-[#121216] border border-blue-900/30 hover:border-blue-800/50 text-blue-400 hover:text-blue-300 font-semibold rounded-lg text-sm transition focus:outline-none disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm font-mono uppercase tracking-wide text-xs"
             >
               <Sparkles className="w-3.5 h-3.5" /> Instant Guest Access
             </button>
@@ -623,6 +639,74 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
       <div className="mt-8 text-xs text-gray-600 font-mono text-center">
         Created, developed, designed, and built by <span className="text-gray-400">VoidX_404</span>
       </div>
+
+      {/* Universal Privacy Policy Modal */}
+      {showPrivacyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+          <div className="w-full max-w-lg bg-[#0E0E12] border border-blue-900/30 rounded-xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-white flex items-center gap-2">
+                <Shield className="w-4 h-4 text-blue-500 animate-pulse" /> Universal Code Studio - Privacy Policy
+              </h3>
+              <button
+                onClick={() => setShowPrivacyModal(false)}
+                className="text-gray-400 hover:text-white transition text-xs font-mono"
+              >
+                CLOSE
+              </button>
+            </div>
+            
+            <div className="overflow-y-auto py-4 space-y-4 text-xs text-gray-400 leading-relaxed pr-1 font-sans">
+              <div>
+                <h4 className="text-white font-semibold font-mono text-[11px] uppercase tracking-wide mb-1">
+                  1. Powerful Compute Sandboxing Policy
+                </h4>
+                <p>
+                  Universal Code Studio is a fully integrated, sandboxed development container. It is engineered to host, compile, and execute the absolute most powerful programming commands, full-stack servers, microservices, advanced scripting routines, and custom <strong>game development loops</strong>. Anything that can be achieved in native system environments is fully validated and executed inside your container isolation layer.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="text-white font-semibold font-mono text-[11px] uppercase tracking-wide mb-1">
+                  2. Privacy, Ephemerality & Data Integrity
+                </h4>
+                <p>
+                  Your source code, file structures, execution histories, and private keys belong 100% to you. We strictly monitor and enforce zero-telemetry guidelines:
+                </p>
+                <ul className="list-disc pl-4 mt-1.5 space-y-1">
+                  <li><strong>Zero Logging of Active Code:</strong> Your typed inputs, files, and running terminals are executed in your direct sandboxed memory block.</li>
+                  <li><strong>Security Audited Operations:</strong> System actions, file alterations, and security configurations are written directly to your private workspace database to guarantee offline traceability.</li>
+                  <li><strong>MFA and Encryption:</strong> All account configurations, recovery keys, and workspace sessions are encrypted locally using PBKDF2-SHA512 algorithms.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-white font-semibold font-mono text-[11px] uppercase tracking-wide mb-1">
+                  3. Secure Guest Isolation
+                </h4>
+                <p>
+                  Guest IDs are dynamically provisioned in memory. All files, folders, and outputs generated during your guest session are privately compartmentalized under your guest identifier. Upon logging out, your ephemeral session tokens are permanently and securely wiped.
+                </p>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-800 pt-4 flex justify-between items-center gap-3 shrink-0">
+              <div className="text-[10px] text-gray-500 font-mono">
+                VoidX_404 Security Core v3.1
+              </div>
+              <button
+                onClick={() => {
+                  setAcceptPrivacy(true);
+                  setShowPrivacyModal(false);
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-mono uppercase text-xs font-bold rounded-lg transition"
+              >
+                Accept and Agree
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

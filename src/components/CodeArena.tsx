@@ -33,6 +33,7 @@ interface CodeArenaProps {
   projectId: string;
   onBackToDashboard: () => void;
   onNavigateToHelp: () => void;
+  isMobileLayout?: boolean;
 }
 
 export default function CodeArena({
@@ -40,6 +41,7 @@ export default function CodeArena({
   projectId,
   onBackToDashboard,
   onNavigateToHelp,
+  isMobileLayout = false,
 }: CodeArenaProps) {
   // Config & Entities State
   const [project, setProject] = useState<Project | null>(null);
@@ -61,6 +63,7 @@ export default function CodeArena({
   // Layout panels
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [consoleTab, setConsoleTab] = useState<"terminal" | "diagnostics" | "history">("terminal");
+  const [activeMobilePanel, setActiveMobilePanel] = useState<"files" | "editor" | "terminal">("editor");
 
   // File explorer creation controls
   const [isCreatingFile, setIsCreatingFile] = useState(false);
@@ -141,6 +144,9 @@ export default function CodeArena({
     }
     // Dismiss any stale compiler fix
     setAiErrorFix(null);
+    if (isMobileLayout) {
+      setActiveMobilePanel("editor");
+    }
   };
 
   const closeTab = (fileId: string, e: React.MouseEvent) => {
@@ -308,6 +314,9 @@ export default function CodeArena({
     setCompilerErrorOccurred(false);
     setAiErrorFix(null);
     setConsoleTab("terminal");
+    if (isMobileLayout) {
+      setActiveMobilePanel("terminal");
+    }
     setTerminalOutput(`[Launching Sandbox Execution: ${activeFile.name}]\nRunning in container sandbox...\n`);
 
     try {
@@ -641,14 +650,14 @@ export default function CodeArena({
       </header>
 
       {/* Main Sandbox Workspace Grid */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className={`flex-1 flex overflow-hidden ${isMobileLayout ? "pb-14" : ""}`}>
         {/* LEFT SIDEBAR: FILE EXPLORER */}
-        {isSidebarOpen && (
+        {isSidebarOpen && (!isMobileLayout || activeMobilePanel === "files") && (
           <aside
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`w-64 border-r border-gray-800 bg-[#121216] flex flex-col select-none transition ${
+            className={`${isMobileLayout ? "w-full" : "w-64"} border-r border-gray-800 bg-[#121216] flex flex-col select-none transition ${
               dragOverTree ? "border-blue-500 bg-blue-500/5" : ""
             }`}
             id="workspace-sidebar"
@@ -745,9 +754,11 @@ export default function CodeArena({
         )}
 
         {/* WORKSPACE COLUMN (EDITOR + TERMINAL) */}
-        <main className="flex-1 flex flex-col overflow-hidden bg-[#0A0A0C]">
-          {/* EDITOR SECTION */}
-          <section className="flex-1 flex flex-col overflow-hidden border-b border-gray-800">
+        {(!isMobileLayout || activeMobilePanel !== "files") && (
+          <main className="flex-1 flex flex-col overflow-hidden bg-[#0A0A0C]">
+            {/* EDITOR SECTION */}
+            {(!isMobileLayout || activeMobilePanel === "editor") && (
+              <section className="flex-1 flex flex-col overflow-hidden border-b border-gray-800">
             {/* Top Tab bar */}
             <div className="h-9 border-b border-gray-800 bg-[#121216] flex items-center justify-between select-none pr-3">
               <div className="flex items-center overflow-x-auto h-full scrollbar-none">
@@ -853,9 +864,11 @@ export default function CodeArena({
               </div>
             )}
           </section>
+          )}
 
           {/* LOWER SECTION: TERMINAL, DIAGNOSTICS & SMART ERROR CENTER */}
-          <section className="h-56 bg-[#121216] border-t border-gray-800 flex flex-col overflow-hidden">
+          {(!isMobileLayout || activeMobilePanel === "terminal") && (
+            <section className={`${isMobileLayout ? "flex-1" : "h-56"} bg-[#121216] border-t border-gray-800 flex flex-col overflow-hidden`}>
             {/* Headers Toggle */}
             <div className="h-8 border-b border-gray-800 bg-[#121216] px-3 flex justify-between items-center select-none">
               <div className="flex gap-2">
@@ -984,9 +997,47 @@ export default function CodeArena({
                 </div>
               )}
             </div>
-          </section>
+            </section>
+          )}
         </main>
+        )}
       </div>
+
+      {/* Mobile touch-optimized bottom navigation dock */}
+      {isMobileLayout && (
+        <div className="fixed bottom-0 left-0 right-0 h-14 bg-[#121216] border-t border-gray-800 flex items-center justify-around z-30 px-4">
+          <button
+            onClick={() => setActiveMobilePanel("files")}
+            className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold font-mono uppercase tracking-wider transition ${
+              activeMobilePanel === "files" ? "text-blue-500 font-bold" : "text-gray-500 hover:text-gray-300"
+            }`}
+          >
+            <Folder className="w-5 h-5" />
+            <span>Files</span>
+          </button>
+          <button
+            onClick={() => setActiveMobilePanel("editor")}
+            className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold font-mono uppercase tracking-wider transition ${
+              activeMobilePanel === "editor" ? "text-blue-500 font-bold" : "text-gray-500 hover:text-gray-300"
+            }`}
+          >
+            <FileCode className="w-5 h-5" />
+            <span>Editor</span>
+          </button>
+          <button
+            onClick={() => setActiveMobilePanel("terminal")}
+            className={`flex flex-col items-center justify-center gap-1 text-[10px] font-bold font-mono uppercase tracking-wider transition relative ${
+              activeMobilePanel === "terminal" ? "text-blue-500 font-bold" : "text-gray-500 hover:text-gray-300"
+            }`}
+          >
+            <Terminal className="w-5 h-5" />
+            <span>Terminal</span>
+            {compilerErrorOccurred && (
+              <span className="absolute top-1.5 right-3 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+            )}
+          </button>
+        </div>
+      )}
 
       {/* PROJECT ARCHITECT DRAWER / MODAL */}
       {showProjectArchitect && (
