@@ -253,6 +253,62 @@ app.post("/api/auth/login", (req: Request, res: Response): void => {
   }
 });
 
+// Guest Access Login (no credentials required)
+app.post("/api/auth/guest", (req: Request, res: Response): void => {
+  const ip = req.ip || "127.0.0.1";
+  const ua = req.headers["user-agent"] || "";
+
+  if (isRateLimited(`guest_${ip}`, 15, 60000 * 5)) {
+    res.status(429).json({ error: "Too many guest accesses. Please wait 5 minutes." });
+    return;
+  }
+
+  const randomId = crypto.randomBytes(8).toString("hex");
+  const email = `guest_${randomId}@ucs.local`;
+  const salt = generateSalt();
+  const passwordHash = hashPassword("guest_dummy_pwd_123!", salt);
+
+  const guestUser: User = {
+    id: "usr_gst_" + randomId,
+    email,
+    passwordHash,
+    salt,
+    isVerified: true,
+    mfaEnabled: false,
+    mfaRecoveryCodes: [],
+    createdAt: Date.now(),
+  };
+
+  db.createUser(guestUser);
+  db.logSecurityEvent(guestUser.id, email, "GUEST_ACCESS", "SUCCESS", ip, ua);
+
+  // Generate Guest Session
+  const sessionToken = generateSecureToken();
+  const session: Session = {
+    id: "ses_" + crypto.randomBytes(16).toString("hex"),
+    userId: guestUser.id,
+    token: sessionToken,
+    userAgent: ua,
+    ipAddress: ip,
+    expiresAt: Date.now() + 60000 * 60 * 24, // 24 hours
+    createdAt: Date.now(),
+    mfaVerified: true,
+  };
+
+  db.createSession(session);
+
+  res.json({
+    token: sessionToken,
+    user: {
+      id: guestUser.id,
+      email: guestUser.email,
+      isVerified: true,
+      mfaEnabled: false,
+      isGuest: true,
+    },
+  });
+});
+
 // Verify login 2FA OTP / Recovery Codes
 app.post("/api/auth/otp/verify", (req: Request, res: Response): void => {
   const { token, code, isRecovery } = req.body;

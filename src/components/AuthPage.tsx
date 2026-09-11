@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Shield, Key, Mail, Lock, UserPlus, LogIn, ArrowLeft } from "lucide-react";
+import { Shield, Key, Mail, Lock, UserPlus, LogIn, ArrowLeft, User, Sparkles } from "lucide-react";
 
 interface AuthPageProps {
   onLoginSuccess: (token: string, user: any) => void;
@@ -113,6 +113,29 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
       }
     } catch (err) {
       setError("Network error.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    resetMessages();
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/guest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Guest access failed.");
+      } else {
+        onLoginSuccess(data.token, data.user);
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -288,7 +311,22 @@ export default function AuthPage({ onLoginSuccess }: AuthPageProps) {
               {loading ? "Authenticating..." : "Sign In to Arena"}
             </button>
 
-            <div className="text-center pt-2">
+            <div className="relative my-4 flex py-1 items-center">
+              <div className="flex-grow border-t border-gray-800/60"></div>
+              <span className="flex-shrink mx-3 text-[10px] text-gray-500 font-mono uppercase tracking-widest">or</span>
+              <div className="flex-grow border-t border-gray-800/60"></div>
+            </div>
+
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handleGuestLogin}
+              className="w-full py-2.5 bg-[#16161B] hover:bg-[#1E1E24] active:bg-[#121216] border border-blue-900/30 hover:border-blue-800/50 text-blue-400 hover:text-blue-300 font-semibold rounded-lg text-sm transition focus:outline-none disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm font-mono uppercase tracking-wide text-xs"
+            >
+              <Sparkles className="w-3.5 h-3.5" /> Instant Guest Access
+            </button>
+
+            <div className="text-center pt-3">
               <p className="text-xs text-gray-500">
                 New developer?{" "}
                 <button
